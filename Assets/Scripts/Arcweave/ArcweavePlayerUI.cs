@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using Arcweave.Interpreter.INodes;
+using Arcweave.Project;
+using System.Collections;
+using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
-using Arcweave.Project;
-using System.Text;
-using System.Collections;
 
 namespace Arcweave
 {
@@ -179,17 +180,44 @@ namespace Arcweave
             if (player?.aw?.Project == null) return;
 
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Variables:");
+            bool hasGlobalVariables = false;
+            bool hasBoardVariables = false;
 
+            // Globals
             foreach (var variable in player.aw.Project.Variables)
             {
-                if (variable != null)
+                if (variable == null || variable.Parent != null) continue;
+
+                if (!hasGlobalVariables)
                 {
-                    sb.AppendLine($"{variable.Name}: {variable.Value}");
+                    sb.AppendLine("Global Variables:");
+                    hasGlobalVariables = true;
                 }
+
+                sb.AppendLine($"{variable.Name}: {variable.Value}");
             }
 
+            //Boards
+            foreach (var variable in player.aw.Project.Variables)
+            {
+                if (variable.Parent != null)
+                {
+                    if (variable.Parent is Board b)
+                    {
+                        if (!hasBoardVariables)
+                        {
+                            if (sb.Length > 0) sb.AppendLine();
+                            sb.AppendLine("Board Variables:");
+                            hasBoardVariables = true;
+                        }
+
+                        var boardLabel = string.IsNullOrEmpty(b.Name) ? b.Id : b.Name;
+                        sb.AppendLine($"{boardLabel}.{variable.Name}: {variable.Value}");
+                    }
+                }
+            }
             variablesText.text = sb.ToString();
+
         }
 
         /// <summary>
