@@ -33,7 +33,7 @@ namespace Arcweave.Project
         {
             foreach (var attribute in Attributes)
             {
-                attribute.InitializeInProject(project);
+                attribute?.InitializeInProject(project);
             }
         }
 
