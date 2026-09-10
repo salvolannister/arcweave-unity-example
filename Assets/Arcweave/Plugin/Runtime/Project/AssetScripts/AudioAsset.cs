@@ -66,6 +66,12 @@ namespace Arcweave.Project
         /// <returns>The loaded AudioClip, or null if not found.</returns>
         public AudioClip TryGetAudioClip()
         {
+            
+            if (string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
             string nameWithoutExtension = System.IO.Path.GetFileNameWithoutExtension(name);
             if (!string.IsNullOrEmpty(nameWithoutExtension))
             {
