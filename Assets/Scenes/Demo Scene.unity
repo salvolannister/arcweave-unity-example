@@ -2855,9 +2855,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1168690309}
     - target: {fileID: 1403719407132185583, guid: e8f9dc58e4b2d4e4eb832a4bb5274656, type: 3}
+      propertyPath: showVariables
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1403719407132185583, guid: e8f9dc58e4b2d4e4eb832a4bb5274656, type: 3}
       propertyPath: variablesText
       value: 
       objectReference: {fileID: 2023140797}
+    - target: {fileID: 1403719407132185583, guid: e8f9dc58e4b2d4e4eb832a4bb5274656, type: 3}
+      propertyPath: showAllVariables
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1403719407891140058, guid: e8f9dc58e4b2d4e4eb832a4bb5274656, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
