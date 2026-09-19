@@ -26,6 +26,8 @@ namespace Arcweave
         [Header("Variables UI")]
         public Text variablesText;
         public bool showVariables = true;
+        [Tooltip("Show all variables, including board and component scoped variables")]
+        public bool showAllVariables = true; // Show all variables, including board and component scoped variables
         public float variableUpdateInterval = 0.5f;
         
         [Header("Animations")]
@@ -33,8 +35,7 @@ namespace Arcweave
         public bool animateTextEntries = true;
         [Header("Debug Settings")]
         public bool debugMode = false;
-        [Tooltip("Show all variables, including board and component scoped variables")]
-        public bool showAllVariables = true; // Show all variables, including board and component scoped variables
+
 
         // Private variables
         private List<Button> tempButtons = new List<Button>();
@@ -185,7 +186,7 @@ namespace Arcweave
             var sections = new List<string>();
 
             // Globals
-            var globalVars = player.aw.Project.Variables
+            var globalVars = player.aw.Project.GlobalVariables
                 .Where(v => v != null && v.Parent == null)
                 .ToList();
 
