@@ -2,6 +2,7 @@
 using Arcweave.Project;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
@@ -30,9 +31,10 @@ namespace Arcweave
         [Header("Animations")]
         public float crossfadeTime = 0.3f;
         public bool animateTextEntries = true;
-        
         [Header("Debug Settings")]
         public bool debugMode = false;
+        [Tooltip("Show all variables, including board and component scoped variables")]
+        public bool showAllVariables = true; // Show all variables, including board and component scoped variables
 
         // Private variables
         private List<Button> tempButtons = new List<Button>();
@@ -173,51 +175,104 @@ namespace Arcweave
         }
 
         /// <summary>
-        /// Updates the variable display text
+        /// Updates the variable display text with the global variables
+        /// and optionally board/component scoped variables if showAllVariables is true in the inspector.
         /// </summary>
         private void UpdateVariablesDisplay()
         {
             if (player?.aw?.Project == null) return;
 
-            StringBuilder sb = new StringBuilder();
-            bool hasGlobalVariables = false;
-            bool hasBoardVariables = false;
+            var sections = new List<string>();
 
             // Globals
-            foreach (var variable in player.aw.Project.Variables)
+            var globalVars = player.aw.Project.Variables
+                .Where(v => v != null && v.Parent == null)
+                .ToList();
+
+            if (globalVars.Count > 0)
             {
-                if (variable == null || variable.Parent != null) continue;
-
-                if (!hasGlobalVariables)
-                {
-                    sb.AppendLine("Global Variables:");
-                    hasGlobalVariables = true;
-                }
-
-                sb.AppendLine($"{variable.Name}: {variable.Value}");
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("<b>Global Variables:</b>");
+                foreach (var v in globalVars)
+                    sb.AppendLine($"{v.Name}: {v.Value}");
+                sections.Add(sb.ToString().TrimEnd());
             }
 
-            //Boards
-            foreach (var variable in player.aw.Project.Variables)
+            if (showAllVariables)
             {
-                if (variable.Parent != null)
-                {
-                    if (variable.Parent is Board b)
-                    {
-                        if (!hasBoardVariables)
-                        {
-                            if (sb.Length > 0) sb.AppendLine();
-                            sb.AppendLine("Board Variables:");
-                            hasBoardVariables = true;
-                        }
+                var componentGroups = new Dictionary<object, List<Variable>>();
+                var boardGroups = new Dictionary<object, List<Variable>>();
 
-                        var boardLabel = string.IsNullOrEmpty(b.Name) ? b.Id : b.Name;
-                        sb.AppendLine($"{boardLabel}.{variable.Name}: {variable.Value}");
+                foreach (var variable in player.aw.Project.GetAllVariables())
+                {
+                    if (variable.Parent == null) continue;
+
+                    if (variable.Parent is Board)
+                    {
+                        if (!boardGroups.TryGetValue(variable.Parent, out var list))
+                        {
+                            boardGroups[variable.Parent] = list = new List<Variable>();
+                        }
+                        list.Add(variable);
+                    }
+                    else if (variable.Parent is Project.Component)
+                    {
+                        if (!componentGroups.TryGetValue(variable.Parent, out var list))
+                        {
+                            componentGroups[variable.Parent] = list = new List<Variable>();
+                        }
+                        list.Add(variable);
                     }
                 }
-            }
-            variablesText.text = sb.ToString();
 
+                if (componentGroups.Count > 0)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine("\n<b>Component Variables:</b>");
+                    bool first = true;
+                    foreach (var kvp in componentGroups)
+                    {
+                        if (!first)
+                        {
+                        sb.AppendLine();
+                        }
+                        first = false;
+
+                        var component = (Project.Component)kvp.Key;
+                        var label = string.IsNullOrEmpty(component.Name) ? component.Id : component.Name;
+                        foreach (var v in kvp.Value)
+                        {
+                            sb.AppendLine($"{label}.{v.Name}: {v.Value}");
+                        }
+                    }
+                    sections.Add(sb.ToString().TrimEnd());
+                }
+
+                if (boardGroups.Count > 0)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine("\n<b>Board Variables:</b>");
+                    bool first = true;
+                    foreach (var kvp in boardGroups)
+                    {
+                        if (!first)
+                        {
+                            sb.AppendLine();
+                        }
+                        first = false;
+
+                        var board = (Board)kvp.Key;
+                        var label = string.IsNullOrEmpty(board.Name) ? board.Id : board.Name;
+                        foreach (var v in kvp.Value)
+                        {
+                            sb.AppendLine($"{label}.{v.Name}: {v.Value}");
+                        }
+                    }
+                    sections.Add(sb.ToString().TrimEnd());
+                }
+            }
+
+            variablesText.text = string.Join("\n", sections);
         }
 
         /// <summary>
